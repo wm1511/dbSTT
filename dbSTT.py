@@ -4,6 +4,12 @@ import json
 import os
 
 
+#Making sure needed directories exist
+def check_dir(dirName):
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
+
+
 #Asking user for file to be processed
 def get_filename():
     while True:
@@ -125,7 +131,8 @@ def make_transcription(words, inputFile, segmentDurationMs):
 
 #-----------------------------------------------------------------------------------------------------------------------------
 
-
+check_dir("source")
+check_dir("result")
 speechFile = get_filename()
 #Second arg - duration of file processed by speechsdk [ms]
 splitFiles = split_to_shorter(speechFile, 15000)
