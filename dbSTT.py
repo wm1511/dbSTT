@@ -4,6 +4,15 @@ import json
 import os
 
 
+#Getting user config
+def read_config():
+    with open("config", "r") as config:
+        key = config.readline()[:-1]
+        region = config.readline()[:-1]
+        language = config.readline()
+    return key, region, language
+
+
 #Asking user for file to be processed
 def get_filename():
     while True:
@@ -126,13 +135,13 @@ def make_transcription(words, inputFile, segmentDurationMs):
 #-----------------------------------------------------------------------------------------------------------------------------
 
 
+key, region, language = read_config()
 speechFile = get_filename()
 #Second arg - duration of file processed by speechsdk [ms]
 splitFiles = split_to_shorter(speechFile, 15000)
 
 for file in splitFiles:
-    #Replace the last three args with your params
-    resultJson = recognize_speech(file, "<your-speech-key>", "<your-region>", "<speech-language>")
+    resultJson = recognize_speech(file, key, region, language)
     resultWords = get_best(resultJson)
     #Second arg - minimal duration of result file [ms]
     make_transcription(align_to_ms(resultWords), file, 5000)
