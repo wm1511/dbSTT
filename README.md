@@ -1,5 +1,5 @@
 # dbSTT
-Creating speech database for AI training
+###### Creating speech database for AI training
 ## Prerequisites
 1. Install [**Python**](https://www.python.org/downloads/) (3.7 works fine).
 2. Install [ffmpeg](http://ffmpeg.org/download.html).
