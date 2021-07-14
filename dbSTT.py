@@ -100,7 +100,7 @@ def get_best(operationalJson):
     confidencesNBest = [item['Confidence'] for item in operationalData['NBest']]
     bestIndex = confidencesNBest.index(max(confidencesNBest))
     words = operationalData['NBest'][bestIndex]['Words']
-    print("Najlepsze dopasowanie: " + operationalData['NBest'][bestIndex]['Lexical'])
+    print("Best match: " + operationalData['NBest'][bestIndex]['Lexical'])
     return words
 
 

@@ -12,6 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>dbSTT</Name>
     <RootNamespace>rtSTT</RootNamespace>
+    <SuppressEnvironmentCreationPrompt>True</SuppressEnvironmentCreationPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
