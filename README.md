@@ -1,7 +1,7 @@
 # dbSTT
 ###### Creating speech database for AI training
 ## Prerequisites
-1. Install [**Python**](https://www.python.org/downloads/) (3.7 works fine).
+1. Install [**Python**](https://www.python.org/downloads/).
 2. Install [ffmpeg](http://ffmpeg.org/download.html).
 3. Run `pip install -r requirements.txt` to install dependencies.
 4. Create an [Microsoft Azure](https://azure.microsoft.com/pl-pl/free/) account and create **Speech** resource.
