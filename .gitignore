@@ -1,6 +1,2 @@
-*.pyproj
 config
-*.sln
-*.sqlite
-*.json
-.vs/dbSTT/v16/*
+/venv/

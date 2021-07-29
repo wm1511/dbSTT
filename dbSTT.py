@@ -1,65 +1,76 @@
-import azure.cognitiveservices.speech as speechsdk
+import azure.cognitiveservices.speech as sdk
 from pydub import AudioSegment
 import json
 import os
+import preprocess
 
 
-#Getting user config
+# Making sure needed directories exist
+def check_dirs():
+    if not os.path.exists('source'):
+        os.makedirs('source')
+    if not os.path.exists('result'):
+        os.makedirs('result')
+
+
+# Getting user config
 def read_config():
+    if not os.path.isfile('config'):
+        preprocess.Configurator()
     with open("config", "r") as config:
-        key = config.readline()[:-1]
-        region = config.readline()[:-1]
-        language = config.readline()
-    return key, region, language
+        my_key = config.readline()[:-1]
+        my_region = config.readline()[:-1]
+        my_language = config.readline()
+    return my_key, my_region, my_language
 
 
-#Asking user for file to be processed
+# Asking user for file to be processed
 def get_filename():
     while True:
-        inputFile = input("Enter a name of file to process: ")
+        input_file = input("Enter a name of file to process: ")
         try:
-            _check = AudioSegment.from_wav(proc_path(inputFile))
-            return inputFile
+            _check = AudioSegment.from_wav(proc_path(input_file))
+            return input_file
         except:
             print("Incorrect filename")
 
 
-#Splitting file to smaller parts for more fluent speechsdk usage
-def split_to_shorter(inputFile, splitTime):
-    loadedFile = AudioSegment.from_wav(proc_path(inputFile))
-    fileLeftMs = loadedFile.duration_seconds * 1000
-    startTime = 0
-    splitIndex = 1
-    splitList = []
+# Splitting file to smaller parts for more fluent sdk usage
+def split_to_shorter(input_file, split_time):
+    loaded_file = AudioSegment.from_wav(proc_path(input_file))
+    file_left_ms = loaded_file.duration_seconds * 1000
+    start_time = 0
+    split_index = 1
+    split_list = []
 
-    while fileLeftMs > splitTime:
-        split = loadedFile[startTime:startTime + splitTime]
-        startTime += splitTime
-        fileLeftMs -= splitTime
-        filename = inputFile[:-4] + "-" + str(splitIndex) + ".wav"
+    while file_left_ms > split_time:
+        split = loaded_file[start_time:start_time + split_time]
+        start_time += split_time
+        file_left_ms -= split_time
+        filename = input_file[:-4] + "-" + str(split_index) + ".wav"
         split.export(proc_path(filename), format="wav")
-        splitList.append(filename)
-        splitIndex += 1
+        split_list.append(filename)
+        split_index += 1
 
-    split = loadedFile[startTime:]
-    filename = inputFile[:-4] + "-" + str(splitIndex) + ".wav"
+    split = loaded_file[start_time:]
+    filename = input_file[:-4] + "-" + str(split_index) + ".wav"
     split.export(proc_path(filename), format="wav")
-    splitList.append(filename)
-    print("Quantity of files after split: " + str(splitIndex) + ", Single file length: " + str(splitTime/1000) + "s")
-    return splitList
+    split_list.append(filename)
+    print("Files after split: " + str(split_index) + ", Single file length: " + str(split_time / 1000) + "s")
+    return split_list
 
 
-#Path with the file being processed
+# Path with the file being processed
 def proc_path(name):
     return "source/" + name
 
 
-#Path with the result file
+# Path with the result file
 def res_path(name):
     return "result/" + name
 
 
-#Converting recognition result to miliseconds
+# Converting recognition result to ms
 def align_to_ms(words):
     for word in words:
         word['Offset'] /= 10000
@@ -67,84 +78,56 @@ def align_to_ms(words):
     return words
 
 
-#Using external server for speech recognition
-def recognize_speech(inputFile, key, reg, lang):
-    speech_config = speechsdk.SpeechConfig(subscription=key, region=reg, speech_recognition_language=lang)
+# Using external server for speech recognition
+def recognize_speech(input_file, my_key, my_region, my_language):
+    speech_config = sdk.SpeechConfig(subscription=my_key, region=my_region, speech_recognition_language=my_language)
     speech_config.request_word_level_timestamps()
-    audio_input = speechsdk.AudioConfig(filename=proc_path(inputFile))
-    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_input)
+    audio_input = sdk.AudioConfig(filename=proc_path(input_file))
+    speech_recognizer = sdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_input)
     print("Processing data on external server...")
     result = speech_recognizer.recognize_once_async().get()
-
-    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-        print("Speech recognition successful")
-    elif result.reason == speechsdk.ResultReason.NoMatch:
-        print("Speech can't be recognized: {}".format(result.no_match_details))
-    elif result.reason == speechsdk.ResultReason.Canceled:
-        cancellation_details = result.cancellation_details
-        print("Speech recognition cancelled: {}".format(cancellation_details.reason))
-        if cancellation_details.reason == speechsdk.CancellationReason.Error:
-            print("Error details: {}".format(cancellation_details.error_details))
 
     return result.json
 
 
-#Getting the best recognition result
-def get_best(operationalJson):
-    operationalData = json.loads(operationalJson)
-    if operationalData["RecognitionStatus"] == "Success":
+# Getting the best recognition result
+def get_best(operational_json):
+    operational_data = json.loads(operational_json)
+    if operational_data["RecognitionStatus"] == "Success":
         print("Data correct")
     else:
         print("Data incorrect")
-        exit(error)
-    confidencesNBest = [item['Confidence'] for item in operationalData['NBest']]
-    bestIndex = confidencesNBest.index(max(confidencesNBest))
-    words = operationalData['NBest'][bestIndex]['Words']
-    print("Best match: " + operationalData['NBest'][bestIndex]['Lexical'])
+        exit("Error")
+    confidences_n_best = [item['Confidence'] for item in operational_data['NBest']]
+    best_index = confidences_n_best.index(max(confidences_n_best))
+    words = operational_data['NBest'][best_index]['Words']
+    print("Best match: " + operational_data['NBest'][best_index]['Lexical'])
     return words
 
 
-#Writing transcription of segment to textfile
+# Writing transcription of segment to text file
 def text_to_file(text, filename):
     with open(res_path(filename + ".txt"), "w") as textFile:
         textFile.write(text)
 
 
-#Splitting files without cutting words and exporting results
-def make_transcription(words, inputFile, segmentDurationMs):
-    startTime = words[0]['Offset']
-    loadedFile = AudioSegment.from_wav(proc_path(inputFile))
-    segmentIndex = 1
-    segmentText = ""
+# Splitting files without cutting words and exporting results
+def make_transcription(words, input_file, segment_duration_ms):
+    start_time = words[0]['Offset']
+    loaded_file = AudioSegment.from_wav(proc_path(input_file))
+    segment_index = 1
+    segment_text = ""
     for word in words:
-        segmentText += word['Word'] + " "
-        if word['Offset'] - startTime > segmentDurationMs or words.index(word) == len(words) - 1:
+        segment_text += word['Word'] + " "
+        if word['Offset'] - start_time > segment_duration_ms or words.index(word) == len(words) - 1:
 
-            filename = inputFile[:-4] + '-' + str(segmentIndex)
-            print("Segment " + str(segmentIndex) + ": " + segmentText[:-1])
-            text_to_file(segmentText[:-1], filename)
-            segmentText = ""
+            filename = input_file[:-4] + '-' + str(segment_index)
+            print("Segment " + str(segment_index) + ": " + segment_text[:-1])
+            text_to_file(segment_text[:-1], filename)
+            segment_text = ""
 
-            segment = loadedFile[startTime:(word['Offset'] + word['Duration'])]
+            segment = loaded_file[start_time:(word['Offset'] + word['Duration'])]
             if words.index(word) != len(words) - 1:
-                startTime = words[words.index(word) + 1]['Offset']
-            segment.export(res_path(filename + ".wav"), format = "wav")
-            segmentIndex += 1
-
-
-#-----------------------------------------------------------------------------------------------------------------------------
-
-
-key, region, language = read_config()
-speechFile = get_filename()
-#Second arg - duration of file processed by speechsdk [ms]
-splitFiles = split_to_shorter(speechFile, 15000)
-
-for file in splitFiles:
-    resultJson = recognize_speech(file, key, region, language)
-    resultWords = get_best(resultJson)
-    #Second arg - minimal duration of result file [ms]
-    make_transcription(align_to_ms(resultWords), file, 5000)
-    os.remove(proc_path(file))
-    print("\n")
-os.remove(proc_path(speechFile))
+                start_time = words[words.index(word) + 1]['Offset']
+            segment.export(res_path(filename + ".wav"), format="wav")
+            segment_index += 1
