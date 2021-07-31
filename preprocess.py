@@ -45,6 +45,7 @@ class Configurator:
 
         self.root.mainloop()
 
+    # Saving config data to file
     def save_data(self):
         with open("config", "w") as config:
             config.write(self.key_entry.get() + '\n')
