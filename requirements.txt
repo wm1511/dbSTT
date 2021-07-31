@@ -1,2 +1,2 @@
 pydub~=0.25.1
-azure-cognitiveservices-speech
+azure-cognitiveservices-speech~=1.18.0
