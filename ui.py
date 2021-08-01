@@ -2,6 +2,7 @@ import tkinter as tk
 import tkinter.filedialog
 import tkinter.messagebox
 import tkinter.ttk
+import threading
 import func
 
 
@@ -28,8 +29,8 @@ def split_message(index, time):
                                                               ", Single file length: " + str(time / 1000) + "s")
 
 
-def hard_error():
-    tk.messagebox.showerror(title="Error", message="Recognition failed")
+def hard_error(status):
+    tk.messagebox.showerror(title="Error", message="Recognition failed, " + status)
 
 
 class Application:
@@ -68,7 +69,6 @@ class Application:
         recognize_button.grid(row=2, pady=10)
         recognize_frame.grid(row=0, column=4, padx=20, pady=20)
 
-        # TODO Repair progressbar
         self.progress_bar = tk.ttk.Progressbar(self.root, orient=tk.HORIZONTAL, length=500, mode='determinate')
         self.progress_bar.grid(row=2, columnspan=5, pady=20, padx=20)
 
@@ -100,7 +100,8 @@ class Application:
                 best_recognition = func.align_to_ms(func.get_best(recognition))
                 self.loaded_file.make_transcription(best_recognition, file, int(self.recognize_entry.get()))
                 self.loaded_file.clean_directory(file)
-                self.progress_bar['value'] += int(500/len(self.file_list))
+                self.progress_bar['value'] += 100/len(self.file_list)
+                self.root.update_idletasks()
             tk.messagebox.showinfo(title="Success", message="Recognition succeeded!")
         except TypeError:
             tk.messagebox.showerror(title="File error", message="You have to open sound file first!")

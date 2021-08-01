@@ -21,7 +21,7 @@ def read_config():
 def get_best(operational_json):
     operational_data = json.loads(operational_json)
     if operational_data["RecognitionStatus"] != "Success":
-        ui.hard_error()
+        ui.hard_error(operational_data['RecognitionStatus'])
     confidences_n_best = [item['Confidence'] for item in operational_data['NBest']]
     best_index = confidences_n_best.index(max(confidences_n_best))
     words = operational_data['NBest'][best_index]['Words']
