@@ -16,3 +16,5 @@ Speech API cuts recognition after 2s of silence, what's a reason of splitting so
 Using 15s parts reduces the risk of cutting too much of the source file.
 Silence-trimming tools like [my another repo](https://github.com/wm1511/VisTrim) can be used before using this program.
 Then you can reduce the duration of intermediary files and increase precision.
+## App screenshot
+![User interface](dbstt.jpg)
